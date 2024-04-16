@@ -2,15 +2,16 @@
 using APICatalogo.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
 namespace APICatalogo.Controllers
 {
-    [Route("api/[controller]")] 
+    [Route("api/[controller]")]
     [ApiController]
     public class ProdutosController : ControllerBase
     {
-        
+
         // INJEÇÃO DE DEPENDENCIA CONTEXT
         private readonly AppDbContext _context;
 
@@ -20,8 +21,30 @@ namespace APICatalogo.Controllers
             _context = context;
         }
 
+        // GET CHAMA PRIMEIRO PRODUTO DA LISTA
+        // /api/produtos/primeiro
+        [HttpGet("primeiro")]
+        //[HttpGet("{valor:alpha:length(5)}")]  // RESTRIÇÃO SO ACEITA VALOR ALFANUMERICOS DE A - Z
+                                                //DE TAMANHO 5
+        public async Task<ActionResult <Produto>> GetPrimeiro() // TRANSFORMANDO EM ASSINCRONO  async + Task
+        {
+            // USANDO CONTEXT PEGANDO PRIMEIRO ITEM DA LISTA PRODUTOS
+            var produto =  await _context.Produtos.FirstOrDefaultAsync(); // mudei FirstOrDefault por FirstOrDefaultAsync
+                                                                          // além claro do await  
+            //TRATANDO ERRO
+            if(produto is null)
+            {
+                return  NotFound("Produto não encontrado");
+            }
+
+            // OK METODO QUE RETORNA STATUS 200 E PRODUTO
+            return   Ok(produto);
+
+        }
+
 
         //  GET QUE CHAMA LISTA DE TODOS OS PRODUTOS
+        // /api/produtos
         [HttpGet]
         public ActionResult<IEnumerable<Produto>> Get()
         {
@@ -42,11 +65,15 @@ namespace APICatalogo.Controllers
 
 
         // GET QUE CHAMA UM PRODUTO ESPECIFICO
-        [HttpGet("{id:int}", Name = "ObterProduto")]
-        public ActionResult<Produto> Get(int id)
-        {
+        // /api/produtos/id
+        // PARAMETRO TIPO INT E QUE SEJA NO MINIMO 1 (RESTRIÇÃO DE ROTA)
+        [HttpGet("{id:int:min(1)}", Name = "ObterProduto")]
+        public async Task<ActionResult<Produto>> Get(int id, [BindRequired] string nome) // precisa informar na url nome
+        {                                                                                // /api/produtos/1?nome=Suco
+            var nomeProduto = nome; 
+
             // USANDO _CONTEXTO PARA PEGAR PRIMEIRO PRODUTO BASEADO NA ID
-            var produto = _context.Produtos.FirstOrDefault(p => p.ProdutoId == id);
+            var produto = await _context.Produtos.FirstOrDefaultAsync(p => p.ProdutoId == id);
 
 
             // TRATAMENTO DE ERRO
@@ -62,6 +89,7 @@ namespace APICatalogo.Controllers
 
 
         // metodo tipo POST
+        // /api/produtos
         [HttpPost]
         public ActionResult Post(Produto produto) // vai receber na request um tipo Produto
         {
@@ -92,6 +120,7 @@ namespace APICatalogo.Controllers
 
 
         // PUT (ALTERACAO) DE UM PRODUTO BASEADO NA ID PASSSA DA REQUEST
+        // /api/produtos/id
         [HttpPut("{id:int}")]
         public ActionResult Put(int id, Produto produto)
         {
@@ -115,6 +144,7 @@ namespace APICatalogo.Controllers
         }
 
         // DELETE DE UM PRODUTO BASEADO NO ID PASSADO NA REQUEST
+        // /api/produtos/id
         [HttpDelete("{id:int}")]
         public ActionResult Delete(int id)
         {

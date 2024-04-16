@@ -1,5 +1,6 @@
 ﻿using APICatalogo.Context;
 using APICatalogo.Models;
+using APICatalogo.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -15,10 +16,50 @@ namespace APICatalogo.Controllers
         // pegando o contexto  
         private readonly AppDbContext _context;
 
+        // 05 prorpiedade somente leitura de configuração
+        // acessa DADOS appsettings.json usando metodo IConfiguration
+        private readonly IConfiguration _configuration; 
+
+
         //  construtor que recebe o contexto 
-        public CategoriasController(AppDbContext context)
+        //  05 RECEBE PROPRIEDADE PARA LEITURA DE _CONFIGURATION
+        public CategoriasController(AppDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration; // 05 construtor de configuração ver em appsettings.json
+        }
+        
+        // 05 TESTE GET DO CONSTRUTOR DE CONFIGURAÇÃO
+        [HttpGet("LerArquivoConfiguracao")] // DEFININDO A ROTA
+        public string GetValores()
+        {
+            // PEGANDO OS DADOS ATRAVEZ DE _CONFIGURATION
+            var valor1 = _configuration["chave1"];
+            var valor2 = _configuration["chave2"];
+
+            var secao1 = _configuration["secao1:chave2"];
+
+
+            // RETORNANDO STRING COM OS DADOS CONCATENADOS
+            return $"Chave1 = {valor1} \nChave2 = {valor2} \nSeçao1 => Chave2 = {secao1}";
+        }
+
+
+
+        // GET USANDO FROMSERVICES ANTES DO NET 7
+        [HttpGet("UsandoFromServices/{nome}")]
+        public ActionResult<string> GetSaudacaoFromServices(
+            [FromServices] IMeuServico meuServico, string nome) 
+        {
+            return meuServico.Saudacao(nome);
+        }
+
+        // GET DEPOIS DO NET 7 SEM USAR FROM SERVICES QUE É O PADRÃO ATUAL
+        [HttpGet("SemUsarFromServices/{nome}")]
+        public ActionResult<string> GetSaudacaoSemFromServices(
+             IMeuServico meuServico, string nome)
+        {
+            return meuServico.Saudacao(nome);
         }
 
 
