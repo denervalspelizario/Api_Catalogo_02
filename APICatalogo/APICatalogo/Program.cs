@@ -1,4 +1,6 @@
 using APICatalogo.Context;
+using APICatalogo.Extensions;
+using APICatalogo.Filters;
 using APICatalogo.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
@@ -46,6 +48,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(mySqlConnection,
     ServerVersion.AutoDetect(mySqlConnection)));
 
+// CRIANDO FILTRO PERSONALIZADOS AULA 67 SECAO 4
+// DANDO UM BUILDER.SERVICES O TEMPO DE VIDA É ADDSCOPED E DENTRO DE <>
+// ESTOU DEFINDINDO O MEU FILTRO QUE É O APILOGGINGFILTER
+builder.Services.AddScoped<ApiLoggingFilter>();
+
+
 var app = builder.Build();
 
 // A PARTIR DO ASP.NET6 OS MIDDLEWARE SÃO DEFINIDOS NA CLASSE PROGRAM
@@ -57,32 +65,12 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();  // MIDDLEWARE DO SWAGGER
     app.UseSwaggerUI(); // MIDDLEWARE DO SWAGGER QUE O USUARIO INTERAGE
-    
-    // MIDDEWARE QUE ACESSA AS PAGINAS DE EXCESSÃO DAS PAGINAS DO DESENVOLVEDOR
-    app.UseDeveloperExceptionPage();
 
-
+    // HABILITANDO O METODO DE EXTENSÃO DO MIDDLEWARE CRIADO EM EXTENSIONS > APIEXCEPTIONMIDDLEWARE 
+    app.ConfigureExceptionHandler();
 }
 
 app.UseHttpsRedirection();
-
-app.UseAuthorization(); // MIDDLEWARE QUE FAZ AS AUTORIZACOES DE PERMISSÃO DE ACESSO
-
-app.Use(async (context, next) =>
-{
-    // adicionar um codigo antes da request
-    await next(context);
-
-    // adicionar o codigo depois do request
-});
-
+app.UseAuthorization(); // MIDDLEWARE QUE FAZ AS AUTORIZACOES DE PERMISSÃO DE ACESSO 
 app.MapControllers(); // MIDDLEWARE QUE MAPEIA OS CONTROLLER DA APLICAÇÃO
-
-
-// USADO COMO MIDDLEWARE TERMINAL
-app.Run(async (context) =>
-{
-    await context.Response.WriteAsync("Middleware final");
-});
-
 app.Run();

@@ -1,4 +1,5 @@
 ﻿using APICatalogo.Context;
+using APICatalogo.Filters;
 using APICatalogo.Models;
 using APICatalogo.Services;
 using Microsoft.AspNetCore.Http;
@@ -86,6 +87,8 @@ namespace APICatalogo.Controllers
 
         // GET QUE CHAMA LISTA DE TODAS AS CATEGORIAS
         [HttpGet]
+        // AULA 67 SOBRE FILTROS - ADICIONANDO FILTRO COM SERVICEFILTER TIPO APILOGGINGFILTER(FILTRO CRIADO)
+        [ServiceFilter(typeof(ApiLoggingFilter))]
         public ActionResult<IEnumerable<Categoria>> Get()
         {
 
@@ -110,6 +113,10 @@ namespace APICatalogo.Controllers
         [HttpGet("{id:int}", Name = "ObterCategoria")]
         public ActionResult<Categoria> Get(int id)
         {
+
+            // EXCEPTION CRIADA ATRAVEZ DO MIDDLEWARE APIEXCEPTIONMIDDLEWARE
+            //throw new Exception("Exceção ao retornar a categoria por id");
+            
 
             // USANDO _CONTEXTO PARA PEGAR PRIMEIRO PRODUTO BASEADO NA ID
             var categoria = _context.Categorias.FirstOrDefault(p => p.CategoriaId == id);
